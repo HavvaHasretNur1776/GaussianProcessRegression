@@ -10,5 +10,11 @@ variables are trained:
 
 ## Workflow
 - It builds and saves necessary kinematic variables to be used at training: ```prep_data.py```
-- Train the kinematic variables and get model parameters from subset, ```training.py``
-- Apply the model to whole dataset to predict the true solution, ```apply_model.py```
+- Train the kinematic variables and get model parameters from subset: ```training.py```
+- Apply the model to whole dataset to predict the most likely solution: ```apply_model.py```
+
+## Results
+
+![Prediction](images/gp_prediction.png)
+
+The model improves the reconstruction resolution by approximately 20% comparing to the generic approach in this area.
