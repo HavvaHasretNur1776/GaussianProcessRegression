@@ -15,7 +15,8 @@ variables are trained:
 
 ## Results
 
-![Optimal choice of training variables](images/corr_features.png)
+
+<img src="images/corr_features.png" width="700">
 
 ![Correlation between training and test sample](images/train_test.png)
 
