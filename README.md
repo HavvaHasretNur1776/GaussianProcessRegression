@@ -15,6 +15,6 @@ variables are trained:
 
 ## Results
 
-![Prediction](images/gp_prediction.png)
+![Prediction](images/b0_PResolution_log.pdf)
 
-The model improves the reconstruction resolution by approximately 20% comparing to the generic approach in this area.
+The model improves the reconstruction resolution by approximately 40% comparing to the generic approach in this area.
