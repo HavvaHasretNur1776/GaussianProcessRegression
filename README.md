@@ -33,24 +33,6 @@ The model is trained using reconstructed detector observables:
 
 ## Workflow
 
-MC Data
-      │
-      ▼
-prep_data.py
-      │
-      ▼
-training.py
-      │
-      ▼
-Saved Model
-      │
-      ▼
-apply_model.py
-      │
-      ▼
-Predicted Momentum
-
-
 - It builds and saves necessary kinematic variables to be used at training: ```prep_data.py```
 - Train the kinematic variables and get model parameters from subset: ```training.py```
 - Apply the model to whole dataset to predict the most likely solution: ```apply_model.py```
