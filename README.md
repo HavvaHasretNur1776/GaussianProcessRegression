@@ -18,8 +18,8 @@ variables are trained:
 
 <img src="images/corr_features.png" width="700">
 
-![Correlation between training and test sample](images/train_test.png)
+<img src="images/train_test.png" width="700">
 
-![Prediction](images/momentum_reso.png)
+<img src="images/momentum_reso.png" width="700">
 
 The model improves the reconstruction resolution by approximately 40% comparing to the generic approach in this area.
