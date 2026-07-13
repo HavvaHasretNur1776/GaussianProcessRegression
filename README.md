@@ -10,6 +10,7 @@ The model combines probabilistic machine learning with numerical optimisation to
 
 - Python
 - TensorFlow
+- AmpliTF
 - GPflow
 - GPU CUDA 12.4 for TensorFlow
 
