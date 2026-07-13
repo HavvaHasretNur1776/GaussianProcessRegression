@@ -20,6 +20,6 @@ variables are trained:
 
 <img src="images/train_test.png" width="700">
 
-<img src="images/momentum_reso.png" width="700">
+<img src="images/momentum_reso.png" width="500">
 
 The model improves the reconstruction resolution by approximately 40% comparing to the generic approach in this area.
