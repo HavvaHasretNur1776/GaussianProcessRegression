@@ -1,25 +1,68 @@
 # GaussianProcessRegression
-Gaussian Process Regression (GPR) is adopted to choose the most likely solution for $B^0$ meson to resolve the quadratic ambiguity. GPR is utilised through TensorFlow and due to large datasets GPU is used for training. 
 
-To implement the sGPR model for the B meson system, several hyper-parameter (training variables) choices were optimised. We adopt the Matern covariance function as a flexible general class of kernels. To ensure computational feasibility without sacrificing accuracy, the number of inducing points was fixed at 4000, providing a robust approximation of the underlying function across the large dataset.
-The training sample (input features) is derived from MC sample for $B^0\to D^*\mu\nu$ after all selection stages applied. To teach the topology of our kinematic space by encapsulating all the necessary information for the sGPR to model the prediction of true magnitude of $B^0$ meson spatial momentum, the following kinematic
-variables are trained:
-- spatial components of $D^*$ meson momentum vector
-- spatial components of $\mu$ momentum vector
-- spatial components of $B^0$ meson flight distance vector
+# Gaussian Process Regression for Momentum Reconstruction
+
+This project implements Sparse Gaussian Process Regression (sGPR) using TensorFlow and GPflow to reconstruct particle momentum from detector observables. The implementation is designed for large-scale datasets and uses GPU acceleration for efficient model training.
+
+The model combines probabilistic machine learning with numerical optimisation to infer the most likely momentum of the particle from measured detector quantities. Compared to the conventional reconstruction approach, the method improves momentum resolution by approximately **40%**.
+
+## Preliminary
+
+- Python
+- TensorFlow
+- GPflow
+- GPU CUDA 12.4 for TensorFlow
+
+## Model Configuration
+
+The model uses a sparse Gaussian Process with a Matérn kernel.
+
+Configuration
+
+- Kernel: Matérn with 4000 inducing points 
+- Target variable: monte carlo true B meson momentum 
+
+### Input Features
+
+The model is trained using reconstructed detector observables:
+
+- D* momentum vector (x, y, z)
+- Muon momentum vector (x, y, z)
+- B meson flight-distance vector (x, y, z)
+
 
 ## Workflow
+
+MC Data
+      │
+      ▼
+prep_data.py
+      │
+      ▼
+training.py
+      │
+      ▼
+Saved Model
+      │
+      ▼
+apply_model.py
+      │
+      ▼
+Predicted Momentum
+
+
 - It builds and saves necessary kinematic variables to be used at training: ```prep_data.py```
 - Train the kinematic variables and get model parameters from subset: ```training.py```
 - Apply the model to whole dataset to predict the most likely solution: ```apply_model.py```
 
 ## Results
 
-
+### Feature Correlation
 <img src="images/corr_features.png" width="700">
 
+### Training Performance
 <img src="images/train_test.png" width="700">
 
+### Momentum Resolution
 <img src="images/momentum_reso.png" width="500">
 
-The model improves the reconstruction resolution by approximately 40% comparing to the generic approach in this area.
