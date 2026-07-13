@@ -5,5 +5,5 @@ To implement the sGPR model for the B meson system, several hyper-parameter (tra
 The training sample (input features) is derived from MC sample for B0\to D*\mu\nu after all selection stages applied. To teach the topology of our kinematic space by encapsulating all the necessary information for the sGPR to model the prediction of true magnitude of B0 meson spatial momentum, the following kinematic
 variables are trained:
 - spatial components of D* meson momentum vector
-- spatial components of \mu momentum vector
+- spatial components of $\mu$ momentum vector
 - spatial components of B0 meson flight distance vector
