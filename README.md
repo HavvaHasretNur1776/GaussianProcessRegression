@@ -17,8 +17,8 @@ variables are trained:
 
 ![Optimal choice of training variables](images/corr_features.png)
 
-![Correlation between training and test sample](images/train_test.pdf)
+![Correlation between training and test sample](images/train_test.png)
 
-![Prediction](images/b0_PResolution_log.pdf)
+![Prediction](images/momentum_reso.png)
 
 The model improves the reconstruction resolution by approximately 40% comparing to the generic approach in this area.
