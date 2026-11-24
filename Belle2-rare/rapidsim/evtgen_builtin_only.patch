@@ -1,0 +1,59 @@
+diff --git a/src/RapidExternalEvtGen.cc b/src/RapidExternalEvtGen.cc
+index 63405c1..ee6801d 100644
+--- a/src/RapidExternalEvtGen.cc
++++ b/src/RapidExternalEvtGen.cc
+@@ -1,6 +1,7 @@
+ #include "RapidExternalEvtGen.h"
+ 
+ #include <cstdlib>
++#include <cstring>
+ #include <fstream>
+ #include <queue>
+ 
+@@ -19,6 +20,13 @@
+ #include "EvtGenBase/EvtMTRandomEngine.hh"
+ 
+ #include "EvtGenExternal/EvtExternalGenList.hh"
++
++namespace {
++bool useBuiltinModelsOnly() {
++	const char* setting = std::getenv("RAPIDSIM_EVTGEN_BUILTIN_ONLY");
++	return setting && std::strcmp(setting, "1") == 0;
++}
++}
+ #endif
+ 
+ bool RapidExternalEvtGen::decay(std::vector<RapidParticle*>& parts) {
+@@ -127,10 +135,15 @@ bool RapidExternalEvtGen::setupGenerator() {
+ 	uint seed = gRandom->TRandom::GetSeed();
+ 	randomEngine = new EvtMTRandomEngine(seed);
+ 
+-	bool useEvtGenRandom(false);
+-	EvtExternalGenList genList(true, "", "gamma", useEvtGenRandom);
+-	radCorrEngine = genList.getPhotosModel();
+-	extraModels = genList.getListOfModels();
++	if(useBuiltinModelsOnly()) {
++		std::cout << "INFO in RapidExternalEvtGen::setupGenerator : Using built-in EvtGen models only; "
++		          << "optional PHOTOS, Pythia and TAUOLA engines are disabled." << std::endl;
++	} else {
++		bool useEvtGenRandom(false);
++		EvtExternalGenList genList(true, "", "gamma", useEvtGenRandom);
++		radCorrEngine = genList.getPhotosModel();
++		extraModels = genList.getListOfModels();
++	}
+ 
+ 	TString evtPDLPath;
+ 	evtPDLPath += getenv("EVTGEN_ROOT");
+@@ -164,6 +177,12 @@ bool RapidExternalEvtGen::setupGenerator() {
+ 
+ void RapidExternalEvtGen::writeDecFile(TString fname, std::vector<RapidParticle*>& parts, bool usePhotos) {
+ #ifdef RAPID_EVTGEN
++	if(useBuiltinModelsOnly() && usePhotos) {
++		std::cerr << "ERROR in RapidExternalEvtGen::writeDecFile : PHOTOS was requested, but "
++		          << "RAPIDSIM_EVTGEN_BUILTIN_ONLY=1 disables optional external generators. "
++		          << "Unset it to use PHOTOS." << std::endl;
++		std::exit(EXIT_FAILURE);
++	}
+ 	if(!evtGen_) setupGenerator();
+ 
+ 	decFileName_ = fname+".DEC";

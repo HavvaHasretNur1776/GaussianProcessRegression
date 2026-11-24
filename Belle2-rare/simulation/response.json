@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "description": "Sensitivity scenarios, not a calibrated Belle II detector simulation",
+  "response_seed": 8675309,
+  "split_seed": 717,
+  "longitudinal_beta": 0.2727272727272727,
+  "charged_theta_deg": [17.0, 150.0],
+  "photon_regions_deg": [[17.0, 31.4], [32.2, 128.7], [130.7, 150.0]],
+  "min_track_pt_GeV": 0.1,
+  "min_photon_E_GeV": 0.1,
+  "track_resolution_a_per_GeV": 0.001,
+  "track_resolution_b": 0.003,
+  "track_angle_sigma_rad": 0.002,
+  "photon_resolution_a_GeV": 0.001,
+  "photon_resolution_b_sqrtGeV": 0.01,
+  "photon_resolution_c": 0.02,
+  "photon_angle_sigma_rad": 0.01,
+  "roe_track_mass_GeV": 0.13957039,
+  "neutral_hadron_policy": "unobserved",
+  "object_cuts_source": "https://doi.org/10.1103/PhysRevD.109.112006, Section IV; only angular and momentum/energy cuts are modelled",
+  "ecl_region_source": "https://doi.org/10.1007/s41781-023-00105-w; intersected with the ITA 17-150 degree fiducial requirement",
+  "resolution_and_efficiency_status": "Illustrative sensitivity parameters, not fitted Belle II calibrations",
+  "scenarios": [
+    {"name": "visible_4pi", "fiducial": false, "thresholds": false, "track_efficiency": 1.0, "photon_efficiency": 1.0, "smear_scale": 0.0},
+    {"name": "acceptance_only", "fiducial": true, "thresholds": true, "track_efficiency": 1.0, "photon_efficiency": 1.0, "smear_scale": 0.0},
+    {"name": "toy_nominal", "fiducial": true, "thresholds": true, "track_efficiency": 0.97, "photon_efficiency": 0.90, "smear_scale": 1.0},
+    {"name": "toy_stress", "fiducial": true, "thresholds": true, "track_efficiency": 0.90, "photon_efficiency": 0.80, "smear_scale": 2.0}
+  ]
+}

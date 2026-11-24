@@ -1,0 +1,19 @@
+--- a/src/RapidExternalEvtGen.cc
++++ b/src/RapidExternalEvtGen.cc
+@@ -9,6 +9,7 @@
+ #include "TSystem.h"
+ 
+ #ifdef RAPID_EVTGEN
++#include "EvtKnunu.h"
+ #include "EvtGen/EvtGen.hh"
+ #include "EvtGenBase/EvtRandomEngine.hh"
+ #include "EvtGenBase/EvtAbsRadCorr.hh"
+@@ -145,6 +146,8 @@
+ 		extraModels = genList.getListOfModels();
+ 	}
+ 
++	extraModels.push_back(new Belle2::EvtKnunu());
++
+ 	TString evtPDLPath;
+ 	evtPDLPath += getenv("EVTGEN_ROOT");
+ 	evtPDLPath += "/evt.pdl";

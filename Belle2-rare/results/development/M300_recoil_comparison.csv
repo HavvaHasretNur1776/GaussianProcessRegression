@@ -1,0 +1,5 @@
+comparison,delta_validation_rmse_GeV2,paired_lower_GeV2,paired_upper_GeV2
+trainable11 minus fixed11,-0.000826,-0.001353,-0.000287
+fixed13 minus fixed11,-0.000225,-0.001321,0.000805
+trainable13 minus fixed13,-0.000019,-0.000721,0.000648
+trainable13 minus trainable11,0.000582,-0.000447,0.001507

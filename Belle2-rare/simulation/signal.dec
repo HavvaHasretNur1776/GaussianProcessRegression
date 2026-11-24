@@ -1,0 +1,13 @@
+# Conditional charged-B signal sample; generic B- table is left unchanged.
+# FSR is disabled explicitly in the driver after all decay tables are read.
+Alias SignalB B+
+Decay Upsilon(4S)
+1.0 SignalB B- VSS;
+Enddecay
+
+Decay SignalB
+0.333333333333 K+ nu_e anti-nu_e KNUNU;
+0.333333333333 K+ nu_mu anti-nu_mu KNUNU;
+0.333333333334 K+ nu_tau anti-nu_tau KNUNU;
+Enddecay
+End
