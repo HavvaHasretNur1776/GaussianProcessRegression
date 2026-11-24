@@ -60,11 +60,11 @@ The uncertainty interval for the **relative RMSE reduction** is **14.76–18.02%
 
 In the fixed-energy electron–positron centre-of-mass frame, the beam fixes the B energy and momentum magnitude. Inclusive tagging leaves its direction uncertain. Belle II approximates the B as stationary when constructing its kaon-energy estimator. In natural units,
 
-$$q^2_{\mathrm{ITA}}=s/4+m_K^2-\sqrt{s}\,E_K^*.$$
+$q^2_{\mathrm{ITA}}=s/4+m_K^2-\sqrt{s}\,E_K^*.$
 
 The GP estimates the missing angular quantity from reconstructed event information. Its training label is the cosine between the generator-level signal B and kaon directions. For each prediction, the reconstructed kaon and the beam constraint give
 
-$$q^2_{\mathrm{GP}}=m_B^2+m_K^2-\sqrt{s}\,E_K^*+2|\mathbf p_B^*||\mathbf p_K^*|\,\widehat{\cos\theta_{BK}^*}.$$
+$q^2_{\mathrm{GP}}=m_B^2+m_K^2-\sqrt{s}\,E_K^*+2|\mathbf p_B^*||\mathbf p_K^*|\,\widehat{\cos\theta_{BK}^*}.$
 
 The first term uses the B mass shell, so the full difference between the estimators includes both a constant mass correction and the angular term. The published baseline is Eq. (2) of the Belle II analysis. [Belle II, Phys. Rev. D 109, 112006 (2024)](https://doi.org/10.1103/PhysRevD.109.112006)
 
