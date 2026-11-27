@@ -1,118 +1,111 @@
-# Belle-BtoKnunu
+# Reconstructing q² in B⁺ → K⁺νν̄ with Gaussian process regression
 
-**Improving inclusive-tag q² reconstruction in B⁺ → K⁺νν̄**
+In B⁺ → K⁺νν̄, both neutrinos escape detection. Belle II’s inclusive-tag analysis estimates q², the invariant mass squared of the neutrino pair, from the kaon energy by treating the signal B as stationary in the collision centre-of-mass frame. The B has a small momentum in this frame. As a result, even two perfectly measured kaons with the same energy can correspond to different true values of q². [Belle II, Eq. (2), Phys. Rev. D 109, 112006 (2024)](https://doi.org/10.1103/PhysRevD.109.112006)
 
-Can the visible recoil tell us enough about the signal B direction to improve the reconstructed mass squared of the neutrino pair? In this signal-only toy, a sparse Gaussian process (GP) reduced the event-by-event q² root-mean-square error by **16.36%** relative to the Belle II inclusive-tag estimator applied to the same 3,513 validation events. The central 68% of residuals also narrowed.
+Keeping the B momentum in the calculation introduces the term $2 p_B p_K \cos\theta_{BK}$. The beam energy fixes the B momentum magnitude, so the missing information is the angle between the B and the kaon. The two B mesons recoil against each other, which means the visible decay products of the companion B carry information about the signal B direction. We train a sparse Gaussian process (GP) on 11 reconstructed quantities to predict $\cos\theta_{BK}$ and use that prediction to calculate q² for each event.
 
-## Follow the analysis from the beginning
+In a differential measurement, limited q² resolution moves events between neighbouring bins and can wash out differences between predicted spectra. A more precise event-by-event estimate could help preserve those differences. On 3,513 signal-only toy validation events, the GP reduced the q² root-mean-square error by **16.36%** relative to the Belle II estimator applied to the same events.
 
-| Stage | Start here | Output |
+## How we reconstruct q²
+
+With the stationary-B approximation, Belle II’s inclusive-tag estimator is
+
+```math
+q^2_{\mathrm{ITA}} = \frac{s}{4} + m_K^2 - \sqrt{s} E_K
+```
+
+Using the B mass and the predicted direction cosine gives
+
+```math
+q^2_{\mathrm{GP}} = m_B^2 + m_K^2 - \sqrt{s} E_K + 2 p_B p_K \hat{c}_{BK}
+```
+
+All energies and momenta are in the collision centre-of-mass frame. $E_K$ and $p_K$ are the reconstructed kaon energy and momentum magnitude, $p_B$ is the B momentum magnitude, and $\hat{c}_{BK}$ is the GP prediction of $\cos\theta_{BK}$.
+
+## Model configuration
+
+- **Target:** the cosine between the **true B direction and true kaon direction** in simulated events.
+- **Model:** GPflow sparse Gaussian process regression with a Matérn-5/2 kernel, linear and constant kernel terms, and a linear mean.
+- **Inducing points:** 1,000 by default. The fit starts from k-means centres and learns their positions. Set `M` in the notebook to change the count.
+- **Training:** 5,000 events sampled from a pool of 10,842. We select the fit with the lowest q² RMSE on 3,513 validation events and reserve 3,593 events for testing.
+
+### Input features
+
+The GP receives 11 reconstructed quantities. The *rest of the event* (ROE) consists of the visible particles left after removing the signal kaon.
+
+| Source | Inputs |
+|---|---|
+| Kaon (2) | Energy and polar-angle cosine relative to the beam |
+| ROE momentum (4) | Total visible energy, magnitude of the summed momentum, cosine of the angle to the kaon, and polar-angle cosine relative to the beam |
+| ROE composition (2) | Net charge and scalar sum of individual momentum magnitudes |
+| Missing energy and momentum (3) | Missing energy, missing momentum magnitude, and polar-angle cosine of the missing momentum |
+
+## Workflow
+
+**To run the fit on CERN SWAN**, open the training notebook in a GPU session and run the cells in order. It reads the bundled feature table, fits the GP, and plots the comparison with the Belle II estimator. [Training notebook](SWAN_trainable11.ipynb) · [11-input dataset](data/eleven.npz)
+
+**To reproduce the study from event generation**, follow the stages below.
+
+| Stage | What it does | Files |
 |---|---|---|
-| Kinematic baseline | [First notebook](notebooks/01_kinematic_baseline.ipynb) | Ideal-kinematics checks of the stationary-B approximation |
-| Signal decay | [RapidSim build, cards and validation](rapidsim/README.md) | 100,000 unsmeared B⁺ → K⁺νₑν̄ₑ decays with the KNUNU amplitude |
-| Charged B pair | [EvtGen driver](simulation/BPairGenerator.cc), [forced decay table](simulation/signal.dec) | 20,000 Υ(4S) → B⁺B⁻ events with a generic tag-side decay |
-| Reconstruction | [Object response](simulation/response.json), [feature exporter](simulation/export_features.py) | 17,948 retained signal kaons and 11 reconstructed inputs |
-| Regression and validation | [CERN SWAN notebook](SWAN_trainable11.ipynb), [paired evaluation](evaluate.py) | A fitted angular GP, validation predictions and a q² comparison |
+| Check the signal decay | Generate 100,000 signal-only decays with RapidSim and validate the KNUNU q² spectrum. This is an independent check. | [RapidSim setup and cards](rapidsim/README.md) |
+| Generate the training sample | Generate 20,000 charged B pairs at 10.58 GeV. EvtGen forces the signal decay and generates the companion B decay. Pythia handles modes that require hadronisation. | [Pair generator](simulation/BPairGenerator.cc) · [Decay table](simulation/signal.dec) |
+| Reconstruct the events | Apply acceptance, efficiency, thresholds and smearing to tracks and photons. The signal kaon survives in 17,948 events. Export the 11 inputs and the simulation labels. | [Response settings](simulation/response.json) · [Feature exporter](simulation/export_features.py) |
+| Train and evaluate | Fit the angular GP and compare the two q² estimates event by event. | [CPU/GPU fit](studies/inducing_scan/fit_validation.py) · [Paired evaluation](evaluate.py) |
 
-The first notebook and the RapidSim tree are independent checks of the signal kinematics. The training dataset starts from the **charged-pair event record**. The companion B produces the visible recoil that lets the GP infer the signal direction. For the main GPU fit you can open the SWAN notebook immediately using the included feature table.
+The optional kinematic notebook illustrates why the B–kaon angle matters, even with a perfectly measured kaon. You can skip it when generating events or training the GP. [Kinematic illustration](notebooks/01_kinematic_baseline.ipynb)
 
-### Generate and reconstruct
+<details>
+<summary>Commands for event generation and reconstruction</summary>
 
-Run the following from the repository root with Git, Bash and Pixi. The bootstrap creates a dedicated RapidSim checkout and a pinned simulation environment under `vendor/RapidSim`. It supports Linux x86-64 and Apple Silicon. The GP runs in its own Python environment.
+Run from the repository root with Git, Bash and Pixi. To start at reconstruction, use `data/reference/bpair_20k.root` as the exporter input.
 
 ```bash
-# 1. Signal-only check
 bash rapidsim/setup.sh
 bash rapidsim/generate.sh 100000 runs/rapidsim_signal
-
-# Reuse this environment for ROOT, EvtGen, Pythia and the C++ compiler
 sim() { pixi run --manifest-path vendor/RapidSim/pixi.toml --frozen -- "$@"; }
 sim python rapidsim/validate_signal.py runs/rapidsim_signal/BToKnunu_tree.root
 
-# 2. Generate a charged pair and check the full decay record
 sim cmake -S simulation -B build/bpair -GNinja
 sim cmake --build build/bpair
 sim build/bpair/BPairGenerator.exe --events 20000 --seed 1776 --output runs/bpair.root
 sim python simulation/validate_bpair.py --input runs/bpair.root --outdir runs/bpair_validation
-
-# 3. Apply the nominal response and write the 11 inputs, truth labels and split IDs
 sim python simulation/export_features.py runs/bpair.root runs/regenerated.npz
 sim python simulation/test_response.py
 ```
 
-The full-pair validation checks the signal q² and B production-angle distributions, charge conservation, ancestry, four-momentum closure and hadronisation of the generic tag. [Generator validation results](results/bpair_validation_20k.json) · [Validation plots](results/bpair_validation.png)
+</details>
 
-To start at reconstruction, use `data/reference/bpair_20k.root` as the exporter input. The original [RapidSim tree](data/reference/BToKnunu_tree.root), [RapidSim histograms](data/reference/BToKnunu_hists.root) and [charged-pair tree](data/reference/bpair_20k.root) are included. In the nominal response, charged tracks must have transverse momentum ≥0.1 GeV and polar angle 17–150°. Photons must have energy ≥0.1 GeV and fall in an accepted calorimeter region within that angular range. Smearing, object efficiencies and gaps operate in the toy lab frame. Retained objects are boosted back to the CM for feature construction. The kaon is truth-designated and must survive the same charged-object response. [Response implementation](simulation/response.py) · [Numerical settings and sources](simulation/response.json)
-
-## Validation result
-
-| Metric (GeV²) | Belle II estimator on toy | Angular GP on toy |
-|---|---:|---:|
-| Root-mean-square error | 0.7255 | 0.6068 |
-| Central 68% half-width | 0.7719 | 0.5966 |
-| Mean reconstructed minus true q² | +0.0340 | +0.0119 |
-
-The uncertainty interval for the **relative RMSE reduction** is **14.76–18.02%** from 2,500 paired event-bootstrap resamples. It describes validation-event variation for these fitted predictions. The central 68% half-width, defined as half the distance between the 16th and 84th percentiles, fell by **22.71%**. The plotted result comes from the completed CERN SWAN study. The repository includes the training sample, fitting and evaluation code and the recorded output figure. A fresh fit produces its own checkpoint and event-level predictions.
-
-![Generator and reconstructed q² spectra, with event-by-event residuals and paired validation metrics](results/validation.png)
-
-## What the GP learns
-
-In the fixed-energy electron–positron centre-of-mass frame, the beam fixes the B energy and momentum magnitude. Inclusive tagging leaves its direction uncertain. Belle II approximates the B as stationary when constructing its kaon-energy estimator. In natural units,
-
-$q^2_{\mathrm{ITA}}=s/4+m_K^2-\sqrt{s}\,E_K^*.$
-
-The GP estimates the missing angular quantity from reconstructed event information. Its training label is the cosine between the generator-level signal B and kaon directions. For each prediction, the reconstructed kaon and the beam constraint give
-
-$q^2_{\mathrm{GP}}= m_B^2 + m_K^2 - \sqrt{s}\,E_K^{\ast,\mathrm{rec}}+2\,p_B^{\ast}\,p_K^{\ast,\mathrm{rec}}\,\hat{c}_{BK}.$
-  
-The first term uses the B mass shell, so the full difference between the estimators includes both a constant mass correction and the angular term. The published baseline is Eq. (2) of the Belle II analysis. [Belle II, Phys. Rev. D 109, 112006 (2024)](https://doi.org/10.1103/PhysRevD.109.112006)
-
-### The 11 reconstructed inputs
-
-| Object | Stored columns, in training order | Physical content |
-|---|---|---|
-| Kaon | `k_E_cm`, `k_cos_theta_cm` | CM energy and direction relative to the beam |
-| Rest of event (ROE) | `roe_E_cm`, `roe_p_cm`, `roe_cos_k`, `roe_cos_theta_cm` | Total visible recoil energy, momentum magnitude and orientation relative to the kaon and beam |
-| ROE composition | `roe_charge`, `roe_scalar_p_cm` | Net charge and sum of individual momentum magnitudes |
-| Whole event | `event_missing_E_cm`, `event_missing_p_cm`, `event_missing_cos_theta_cm` | Missing energy, missing three-momentum magnitude and its polar-angle cosine |
-
-The ROE excludes the signal-kaon candidate. Energies and three-momenta are in GeV. The truth label and true q² are stored separately from the feature matrix. The input and target scalers use training rows only.
-
-## Train and evaluate the GP
-
-**CERN SWAN GPU.** Open [SWAN_trainable11.ipynb](SWAN_trainable11.ipynb) from this directory in a GPU session. Run its cells in order. The first code cell sets the number of trainable inducing locations (default `M = 1000`). It can reuse a private SWAN Python workspace. The preflight checks float64 Cholesky placement and finite GPflow gradients. The fit writes a new directory under `runs/`. The inclusive-tag comparison reads its saved validation predictions.
-
-**Linux CPU.** From this directory, use Python 3.12 and run:
+<details>
+<summary>Commands for training on a Linux CPU</summary>
 
 ```bash
 python3.12 -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements-cpu.txt
 export TF_USE_LEGACY_KERAS=1 OPENBLAS_NUM_THREADS=1
-python studies/inducing_scan/fit_validation.py \
-  --input data/eleven.npz --outdir runs/cpu_M1000 \
-  --inducing 1000 --train-inducing --device cpu
+python studies/inducing_scan/fit_validation.py --input data/eleven.npz --outdir runs/cpu_M1000 --inducing 1000 --train-inducing --device cpu
 python evaluate.py runs/cpu_M1000
 ```
 
-For a quick installation check, use a fresh output directory and add `--train-cap 128 --inducing 16 --maxiter 2 --validate-every 1` in place of the nominal inducing-count option. The evaluation command writes `paired_validation.png` and `paired_validation.json` into the run directory. For optional test scoring, use the final notebook cell after selecting the configuration. Numeric comparisons across hardware can depend on the optimization trajectory.
+For a freshly exported dataset, pass `--input runs/regenerated.npz` to both the fit and the evaluation. Each fit needs a fresh output directory. It saves its own checkpoint and event-level predictions. The original SWAN run is archived here as a figure and summary metrics.
 
+</details>
 
-### Train on your own export
+## Results
 
-For a fit using the output of stage 3, change the CPU command's input to `--input runs/regenerated.npz`, choose a fresh fit directory, and pass the same input file to the evaluation script. For example, after fitting to `runs/from_generator`:
+The table compares the two estimators on the same events used for validation during training. The residual is reconstructed q² minus true q².
 
-```bash
-python evaluate.py runs/from_generator --input runs/regenerated.npz
-```
+| Validation metric (GeV²) | Belle II estimator on toy | GP on toy |
+|---|---:|---:|
+| Root-mean-square error | 0.7255 | 0.6068 |
+| Central 68% half-width | 0.7719 | 0.5966 |
+| Mean residual | +0.0340 | +0.0119 |
 
-The evaluator checks the dataset checksum against the saved fit, aligns the event IDs and verifies the inclusive-tag formula before computing the paired difference. Regenerating from the bundled charged-pair ROOT file reproduced all 17,948 reference rows, including the inputs, angular targets, true q², baseline estimates and split assignments.
+The central 68% of the residual distribution narrowed by **22.71%**. For the **16.36% reduction in RMSE**, the paired 95% bootstrap interval is **14.76–18.02%** across 2,500 resamples of the validation events.
 
-### Development studies
+![Reconstructed and true q² spectra on the left, and event-by-event residuals for both estimators on the right](results/validation.png)
 
-[Model and reconstruction comparisons](results/development/README.md) cover the initial kaon-only estimate, adding recoil variables, alternative targets, inducing-point counts and the 11-versus-13-input check. The final SWAN model checkpoint and its individual predictions were unavailable for packaging. The reported figure records that run, and the notebook produces new predictions for a refit.
+These figures describe a signal-only toy with a simplified detector response. The generator identifies the signal kaon. Assessing performance in Belle II data requires realistic kaon selection, physics backgrounds and beam-background occupancy.
 
-### Related code
-
-The earlier [LHCb momentum reconstruction](https://github.com/HavvaHasretNur1776/GaussianProcessRegression) used a GP to help resolve the two momentum solutions in a single-neutrino decay. Here the learned quantity is the angular projection entering q². Simulation source credits are in [simulation/NOTICE.md](simulation/NOTICE.md).
+[Development studies and model comparisons](results/development/README.md) · [Generator checks](results/bpair_validation_20k.json) · [Simulation credits](simulation/NOTICE.md) · [Related LHCb momentum reconstruction](https://github.com/HavvaHasretNur1776/GaussianProcessRegression/tree/main/LHCb-semileptonic)
