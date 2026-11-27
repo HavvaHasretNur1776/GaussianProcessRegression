@@ -64,8 +64,8 @@ $q^2_{\mathrm{ITA}}=s/4+m_K^2-\sqrt{s}\,E_K^*.$
 
 The GP estimates the missing angular quantity from reconstructed event information. Its training label is the cosine between the generator-level signal B and kaon directions. For each prediction, the reconstructed kaon and the beam constraint give
 
-$q^2_{\mathrm{GP}}=m_B^2+m_K^2-\sqrt{s}\,E_K^*+2|\mathbf p_B^*||\mathbf p_K^*|\,\widehat{\cos\theta_{BK}^*}.$
-
+$q^2_{\mathrm{GP}}= m_B^2 + m_K^2 - \sqrt{s}\,E_K^{\ast,\mathrm{rec}}+2\,p_B^{\ast}\,p_K^{\ast,\mathrm{rec}}\,\hat{c}_{BK}.$
+  
 The first term uses the B mass shell, so the full difference between the estimators includes both a constant mass correction and the angular term. The published baseline is Eq. (2) of the Belle II analysis. [Belle II, Phys. Rev. D 109, 112006 (2024)](https://doi.org/10.1103/PhysRevD.109.112006)
 
 ### The 11 reconstructed inputs
@@ -98,11 +98,6 @@ python evaluate.py runs/cpu_M1000
 
 For a quick installation check, use a fresh output directory and add `--train-cap 128 --inducing 16 --maxiter 2 --validate-every 1` in place of the nominal inducing-count option. The evaluation command writes `paired_validation.png` and `paired_validation.json` into the run directory. For optional test scoring, use the final notebook cell after selecting the configuration. Numeric comparisons across hardware can depend on the optimization trajectory.
 
-### Fit and sample
-
-The nominal GP uses float64 GPflow SGPR with a Matérn-5/2 covariance and a separate length scale per input, additional linear and constant covariance terms, a linear mean, and a Gaussian likelihood. K-means initializes the inducing locations. L-BFGS-B learns their coordinates and the model parameters with a limit of 1,000 iterations. Training uses 5,000 events drawn from 10,842 training rows. Both training selection and initialization use seed 120. The checkpoint minimizes monitored validation q² RMSE over 3,513 events, evaluated at initialization, every 25 iterations and at the end. There are 3,593 test events. The reported result uses validation.
-
-The toy contains 20,000 charged B pairs produced at a fixed CM energy of 10.58 GeV. A standalone EvtGen driver forces the signal decay using the KNUNU amplitude, generates a generic companion B decay, and invokes Pythia for partonic decay modes. The simplified response applies charged-track and photon acceptance, efficiency, smearing and thresholds. A truth-designated signal kaon survives in 17,948 events. The sample excludes continuum and physics backgrounds, beam-background occupancy and signal-candidate combinatorics. Measuring the impact on Belle II sensitivity requires realistic event selection and migration modelling in the likelihood.
 
 ### Train on your own export
 
