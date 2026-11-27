@@ -20,7 +20,8 @@ Using the B mass and the predicted direction cosine gives
 q^2_{\mathrm{GP}} = m_B^2 + m_K^2 - \sqrt{s} E_K + 2 p_B p_K \hat{c}_{BK}
 ```
 
-All energies and momenta are in the collision centre-of-mass frame. $E_K$ and $p_K$ are the reconstructed kaon energy and momentum magnitude, $p_B$ is the B momentum magnitude, and $\hat{c}_{BK}$ is the GP prediction of $\cos\theta_{BK}$.
+All energies and momenta are in the collision centre-of-mass frame. $E_K$ and $p_K$ are the reconstructed kaon energy and momentum magnitude, $p_B$ is the B momentum magnitude, and $\hat{c}_{BK}$ is the GP prediction of $\cos\theta_BK$.
+
 
 ## Model configuration
 
